@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="./img/RICK_MORTY_ICON.png">
+    <title>RICK AND MORTY API</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<header>
+    <div class="icon">
+        <img src="/./img/RICK_MORTY_ICON.png" alt="icon.png">
+    </div>
+</header>
+<h1>Rick and Morty API</h1>
+<div class="search">
+    <input type="text" id="search-Input" placeholder="Search">
+    <button onclick="searchCharacters()"><i class="bi bi-search"></i></button>
+</div>
+<div class="container">
+    <div class="card-container" id="cardContainer"></div>
+</div>
+
+<div id="pagination"></div>
+<footer class="footer">
+    <ul>
+        <li>
+            <span id="characterCount">CHARACTERS: </span>
+        </li>
+        <li>
+            <span id="locationCount">LOCATIONS: </span>
+        </li>
+        <li>
+            <span id="episodeCount">EPISODES: </span>
+        </li>
+    </ul>
+    <span class="copyright"> Developed by: <a href="https://github.com/LucasSiki" target="_blank" style="color: #ffff;">LUCAS PEREIRA SIKINOWSKI</a> in 2023.</span>
+</footer>
+</body>
+</html>
