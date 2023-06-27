@@ -26,19 +26,275 @@
 </div>
 
 <div id="pagination"></div>
+
 <footer class="footer">
     <ul>
         <li>
-            <span id="characterCount">CHARACTERS: </span>
+            <span id="characterCounter">CHARACTERS: </span>
         </li>
         <li>
-            <span id="locationCount">LOCATIONS: </span>
+            <span id="locationCounter">LOCATIONS: </span>
         </li>
         <li>
-            <span id="episodeCount">EPISODES: </span>
+            <span id="episodeCounter">EPISODES: </span>
         </li>
     </ul>
     <span class="copyright"> Developed by: <a href="https://github.com/LucasSiki" target="_blank" style="color: #ffff;">LUCAS PEREIRA SIKINOWSKI</a> in 2023.</span>
 </footer>
+<div id="characterModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div id="modalData"></div>
+    </div>
+</div>
+
+<script>
+    let pageNow = 1;
+    let Allpages = 1;
+    const cardsOnScreen = 8;
+
+    function searchCharactersOnEnter(event) {
+    if (event.key === "Enter") {
+        searchCharacters();
+    }
+}
+
+const searchInput = document.getElementById('search-Input');
+searchInput.addEventListener('keydown', searchCharactersOnEnter);
+
+
+    function searchCharacters() {
+        const searchInput = document.getElementById('search-Input').value;
+        const apiURL = `https://rickandmortyapi.com/api/character?name=${searchInput}`;
+
+        axios.get(apiURL)
+            .then(function (response) {
+                const characters = response.data.results;
+                Allpages = Math.ceil(characters.length / cardsOnScreen);
+                showCharacters(characters);
+                counterUpdate();
+                pageUpdate();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
+
+    function showCharacters(characters) {
+        const cardContainer = document.getElementById('cardContainer');
+        cardContainer.innerHTML = '';
+
+        const firstI = (pageNow - 1) * cardsOnScreen;
+        const lastI = firstI + cardsOnScreen;
+        const charactersScreen = characters.slice(firstI, lastI);
+
+        charactersScreen.forEach(function (character) {
+            const card = document.createElement('article');
+            card.classList.add('card');
+
+            const img = document.createElement('img');
+            img.src = character.image;
+            img.alt = character.name;
+            card.appendChild(img);
+
+            const cardText = document.createElement('div');
+            cardText.classList.add('card-text');
+
+            const characterName = document.createElement('h2');
+            characterName.textContent = character.name;
+            cardText.appendChild(characterName);
+
+            const characterStatus = document.createElement('h4');
+            characterStatus.innerHTML = `<span class="status ${getStatusColor(character.status)}"></span>${character.status} - ${character.species}`;
+            cardText.appendChild(characterStatus);
+
+            const characterLocation = document.createElement('p');
+            characterLocation.textContent = 'Last know location:';
+            cardText.appendChild(characterLocation);
+
+            const lastLocation = document.createElement('p');
+            axios.get(character.location.url)
+                .then(function (response) {
+                    lastLocation.textContent = response.data.name;
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+            cardText.appendChild(lastLocation);
+
+            const characterLastSeen = document.createElement('p');
+            characterLastSeen.textContent = 'Last seen on:';
+            cardText.appendChild(characterLastSeen);
+
+            const lastSeen = document.createElement('p');
+            axios.get(character.episode[character.episode.length - 1])
+                .then(function (response) {
+                    lastSeen.textContent = response.data.name;
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+            cardText.appendChild(lastSeen);
+
+            card.appendChild(cardText);
+            cardContainer.appendChild(card);
+
+            card.addEventListener('click', function () {
+                modalOpen(character);
+            });
+        });
+    }
+
+    function modalOpen(character) {
+        const modal = document.getElementById('characterModal');
+        const modalData = document.getElementById('modalData');
+        modalData.innerHTML = '';
+
+        const characterName = document.createElement('h2');
+        characterName.textContent = character.name;
+        modalData.appendChild(characterName);
+
+        const img = document.createElement('img');
+        img.src = character.image;
+        img.alt = character.name;
+        modalData.appendChild(img);
+
+        const characterStatus = document.createElement('h4');
+        characterStatus.innerHTML = `<span class="status ${getStatusColor(character.status)}"></span>${character.status} - ${character.species}`;
+        modalData.appendChild(characterStatus);
+
+        const characterLastLocation = document.createElement('p');
+        characterLastLocation.textContent = 'Last know location:';
+        modalData.appendChild(characterLastLocation);
+
+        const lastLocation = document.createElement('p');
+        axios.get(character.location.url)
+            .then(function (response) {
+                lastLocation.textContent = response.data.name;
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+        modalData.appendChild(lastLocation);
+
+        const characterLastSeen = document.createElement('p');
+        characterLastSeen.textContent = 'Last seen on:';
+        modalData.appendChild(characterLastSeen);
+
+        const lastSeen = document.createElement('p');
+        axios.get(character.episode[character.episode.length - 1])
+            .then(function (response) {
+                lastSeen.textContent = response.data.name;
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+        modalData.appendChild(lastSeen);
+
+        modal.style.display = 'block';
+
+        const closeBtn = document.getElementsByClassName('close')[0];
+        closeBtn.addEventListener('click', function () {
+            modalClose();
+        });
+    }
+
+    function modalClose() {
+    const modal = document.getElementById('characterModal');
+    const modalContent = document.querySelector('.modal-content');
+    modalContent.classList.add('fade-out');
+    setTimeout(() => {
+    modal.style.display = 'none';
+    modalContent.classList.remove('fade-out');
+    }, 300);
+}
+
+    function counterUpdate() {
+        axios.all([
+            axios.get('https://rickandmortyapi.com/api/character'),
+            axios.get('https://rickandmortyapi.com/api/location'),
+            axios.get('https://rickandmortyapi.com/api/episode')
+        ])
+            .then(axios.spread(function (characterRes, locationRes, episodeRes) {
+                const characterCount = characterRes.data.info.count;
+                const locationCount = locationRes.data.info.count;
+                const episodeCount = episodeRes.data.info.count;
+
+                document.getElementById('characterCounter').textContent = `PERSONAGENS: ${characterCount}`;
+                document.getElementById('locationCounter').textContent = `LOCALIZAÇÕES: ${locationCount}`;
+                document.getElementById('episodeCounter').textContent = `EPISÓDIOS: ${episodeCount}`;
+            }))
+            .catch(function (err) {
+                console.log(err);
+            });
+    }
+
+    counterUpdate();
+
+    function getStatusColor(status) {
+        switch (status) {
+            case 'Alive':
+                return 'green';
+            case 'Dead':
+                return 'red';
+            default:
+                return 'gray';
+        }
+    }
+
+    function goPage(page) {
+        if (page >= 1 && page <= Allpages) {
+            pageNow = page;
+            searchCharacters();
+        }
+    }
+
+    function pageUpdate() {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+
+        if (Allpages > 1) {
+            const previousBtn = paginationButtonCreate('Previous', pageNow - 1);
+            pagination.appendChild(previousBtn);
+
+            for (let i = 1; i <= Allpages; i++) {
+                const pageButton = paginationButtonCreate(i, i);
+                if (i === pageNow) {
+                    pageButton.classList.add('active');
+                }
+                pagination.appendChild(pageButton);
+            }
+
+            const nextBtn = paginationButtonCreate('Next', pageNow + 1);
+            pagination.appendChild(nextBtn);
+        }
+    }
+
+    function paginationButtonCreate(text, page) {
+        const button = document.createElement('button');
+        button.textContent = text;
+        button.addEventListener('click', function () {
+            goPage(page);
+        });
+        return button;
+    }
+
+    function getCharacters() {
+        const randomPage = Math.floor(Math.random() * Allpages) + 1;
+        const apiUrl = `https://rickandmortyapi.com/api/character?page=${randomPage}`;
+
+        axios.get(apiUrl)
+            .then(function (response) {
+                const characters = response.data.results;
+                showCharacters(characters);
+            })
+            .catch(function (err) {
+                console.log(err);
+            });
+    }
+
+    getCharacters();
+</script>
+
 </body>
 </html>
